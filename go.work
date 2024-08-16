@@ -1,0 +1,10 @@
+go 1.17
+
+use (
+	./driver/mysql
+	./ssh
+)
+
+replace (
+	github.com/cotton-go/pkg/ssh => ./ssh
+)
