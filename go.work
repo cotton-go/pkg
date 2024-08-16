@@ -7,4 +7,6 @@ use (
 
 replace (
 	github.com/cotton-go/pkg/ssh => ./ssh
+	github.com/cotton-go/pkg/driver/mysql => ./driver/mysql
+	github.com/cotton-go/pkg/driver/postgres => ./driver/postgres
 )
