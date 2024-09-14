@@ -11,15 +11,21 @@ import (
 type Hook func()
 
 func Signals() []os.Signal {
-	return []os.Signal{
-		syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGUSR1, syscall.SIGUSR2,
-		os.Kill, os.Interrupt,
+	return []os.Signal{syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL}
+}
+
+func shutdownctx(ctx context.Context) {
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, Signals()...)
+	select {
+	// wait on kill signal
+	case <-ctx.Done():
+	// wait on context cancel
+	case <-done:
 	}
 }
 
 func Shutdown(ctx context.Context, hooks ...Hook) {
-	done := make(chan os.Signal, 1)
-	signal.Notify(done, Signals()...)
 	fn := func() {
 		defer func() {
 			if e := recover(); e != nil {
@@ -32,12 +38,7 @@ func Shutdown(ctx context.Context, hooks ...Hook) {
 		}
 	}
 
-	select {
-	case <-ctx.Done():
-		fn()
-		os.Exit(0)
-	case <-done:
-		fn()
-		os.Exit(0)
-	}
+	go shutdownctx(ctx)
+	shutdownctx(ctx)
+	fn()
 }
