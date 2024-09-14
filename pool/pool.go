@@ -1,21 +1,26 @@
 package pool
 
-import "sync"
+import (
+	"sync"
+)
 
 type Pool interface {
-	Close() error
+	Reset()
 }
 
-type pool[T Pool] struct {
+type pool[T any] struct {
 	p   *sync.Pool
 	opt *Option
 }
 
-func NewPool[T Pool](opts ...Options) *pool[T] {
+func NewPool[T any](opts ...Options) *pool[T] {
 	p := &pool[T]{
 		opt: newOptions(),
-		p: &sync.Pool{
-			New: func() any { return new(T) },
+	}
+	p.p = &sync.Pool{
+		New: func() any {
+			// atomic.AddInt32(&p.opt.count, 1)
+			return new(T)
 		},
 	}
 
@@ -23,10 +28,12 @@ func NewPool[T Pool](opts ...Options) *pool[T] {
 }
 
 func (p *pool[T]) Get() *T {
+	// fmt.Println("get count", atomic.LoadInt32(&p.opt.count))
 	value, _ := p.p.Get().(*T)
 	return value
 }
 
 func (p *pool[T]) Put(v *T) {
+	// fmt.Println("put count", atomic.LoadInt32(&p.opt.count))
 	p.p.Put(v)
 }

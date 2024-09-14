@@ -1,7 +1,8 @@
 package pool
 
 type Option struct {
-	Max int
+	count int32
+	Max   int
 }
 
 type Options func(*Option)
